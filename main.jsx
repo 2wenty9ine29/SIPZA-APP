@@ -542,7 +542,7 @@ function App() {
 
   const cartItems = products.filter(p => cart[p.id]);
   const count = Object.values(cart).reduce((a,b)=>a+b,0);
-  const total = cartItems.reduce((s,p) => s + (price(p) || 0) * cart[p.id], 0);
+  const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0) * item.qty, 0);
 
   return <div className="app">
     <header className="header">
