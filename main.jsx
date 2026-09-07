@@ -9,7 +9,7 @@ const products = [
     "bulk": 41.0,
     "single": 4.0,
     "category": "Cola",
-    "image": ""
+    "image": "https://pbs.twimg.com/media/FuOpIcKWIAAxrg5.jpg"
   },
   {
     "id": 2,
@@ -161,7 +161,7 @@ const products = [
     "bulk": 75.0,
     "single": null,
     "category": "Malt",
-    "image": ""
+    "image": "https://konzoom.shop/cdn/shop/files/choco_malt_533x.jpg?v=1713430126"
   },
   {
     "id": 21,
@@ -193,7 +193,7 @@ const products = [
     "bulk": 40.0,
     "single": null,
     "category": "Wine & Champagne",
-    "image": ""
+    "image": "https://oss.tospinomall.com.gh/product_pic/1ca1f4cbda74456a8bbceebf0ea16aea.jpg"
   },
   {
     "id": 25,
@@ -201,7 +201,7 @@ const products = [
     "bulk": 40.0,
     "single": null,
     "category": "Wine & Champagne",
-    "image": ""
+    "image": "https://oss.tospinomall.com.gh/product_pic/42f3b80b0f9c4f3eb06e35214a827447.png"
   },
   {
     "id": 26,
@@ -209,7 +209,7 @@ const products = [
     "bulk": 30.0,
     "single": 30.0,
     "category": "Juice",
-    "image": ""
+    "image": "https://konzoom.shop/cdn/shop/products/20230111_224948_0000_1445x.jpg?v=1673548810"
   },
   {
     "id": 27,
@@ -217,7 +217,7 @@ const products = [
     "bulk": 17.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://melcom.com/media/catalog/product/cache/8757aa1374eaaf34b9fd32f9e760ba0b/9/1/91457a.jpg"
   },
   {
     "id": 28,
@@ -249,7 +249,7 @@ const products = [
     "bulk": 40.0,
     "single": null,
     "category": "Other",
-    "image": ""
+    "image": "https://pbs.twimg.com/media/FzKmYcKXwAMxmsv.jpg"
   },
   {
     "id": 32,
@@ -273,7 +273,7 @@ const products = [
     "bulk": 30.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.amoragh.com/storage/products/grocery/beverages/kalyppo-multifruit.jpg"
   },
   {
     "id": 35,
@@ -281,7 +281,7 @@ const products = [
     "bulk": 30.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.jiomart.com/images/product/original/rvwjfwhgl4/kangen-water-bottle-500-ml-pack-of-24-product-images-orvwjfwhgl4-p605440042-0-202310041626.jpg?im=Resize%3D%281000%2C1000%29"
   },
   {
     "id": 36,
@@ -329,7 +329,7 @@ const products = [
     "bulk": null,
     "single": 6.0,
     "category": "Other",
-    "image": ""
+    "image": "https://i.pinimg.com/originals/24/56/d9/2456d9c2103ccc9ca2b643507045da9f.jpg"
   },
   {
     "id": 42,
@@ -353,7 +353,7 @@ const products = [
     "bulk": 42.0,
     "single": 4.0,
     "category": "Energy",
-    "image": ""
+    "image": "https://www.rireelstore.com/cdn/shop/files/1681738980392.jpg?v=1707895589&width=416"
   },
   {
     "id": 45,
@@ -369,7 +369,7 @@ const products = [
     "bulk": 35.0,
     "single": null,
     "category": "Wine & Champagne",
-    "image": ""
+    "image": "https://www.drinksghana.com/web/image/product.template/541/image_1920?unique=d3996a9"
   },
   {
     "id": 47,
@@ -393,7 +393,7 @@ const products = [
     "bulk": 50.0,
     "single": 4.0,
     "category": "Energy",
-    "image": ""
+    "image": "https://www.namidor.com/namidor/products/fi96m56q9z4m/FMT-IMG-1754431257.jpg"
   },
   {
     "id": 50,
