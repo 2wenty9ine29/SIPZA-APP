@@ -523,7 +523,8 @@ function ProductImage({ product }) {
 function App() {
   const [active, setActive] = useState("All");
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState("single");
+  const [mode, setMode] = useState("bulk");
+  const [checkout, setCheckout] = useState(false);
   const [cart, setCart] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -533,16 +534,27 @@ function App() {
   ), [active, query]);
 
   const price = p => mode === "single" ? p.single : p.bulk;
-  const add = id => setCart(c => ({...c, [id]: (c[id] || 0) + 1}));
-  const remove = id => setCart(c => {
+  const add = (id, type = mode) => setCart(c => {
+    const key = `${id}-${type}`;
+    return {...c, [key]: (c[key] || 0) + 1};
+  });
+  const remove = (id, type) => setCart(c => {
+    const key = `${id}-${type}`;
     const n={...c};
-    if (!n[id] || n[id] <= 1) delete n[id]; else n[id]--;
+    if (!n[key] || n[key] <= 1) delete n[key]; else n[key]--;
     return n;
   });
 
-  const cartItems = products.filter(p => cart[p.id]);
-  const count = Object.values(cart).reduce((a,b)=>a+b,0);
-  const total = cart.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
+  const cartItems = Object.entries(cart).map(([key, qty]) => {
+    const [id, type] = key.split("-");
+    const p = products.find(x => String(x.id) === id);
+    return p ? {p, type, qty, key} : null;
+  }).filter(Boolean);
+  const count = cartItems.reduce((a,item)=>a+item.qty,0);
+  const total = cartItems.reduce((sum,item) => {
+    const unit = Number(item.type === "single" ? item.p.single : item.p.bulk) || 0;
+    return sum + unit * item.qty;
+  }, 0);
 
   return <div className="app">
     <header className="header">
@@ -591,14 +603,12 @@ function App() {
         {filtered.map(p => <article className="card" key={p.id}>
           <div className="photo">
             <ProductImage product={p}/>
-            <button className="add" onClick={()=>add(p.id)}>+</button>
-            {cart[p.id] > 0 && <span className="badge">{cart[p.id]}</span>}
           </div>
           <div className="info">
             <div className="name"><h3>{p.name}</h3><p>{p.category}</p></div>
             <div className="prices">
-              <div className={mode === "single" ? "price active" : "price"}><small>Single</small><strong>{money(p.single)}</strong></div>
-              <div className={mode === "bulk" ? "price active" : "price"}><small>Bulk</small><strong>{money(p.bulk)}</strong></div>
+              <div className="price active"><small>Bulk</small><strong>{money(p.bulk)}</strong><button className="mini-add" onClick={()=>add(p.id,"bulk")}>+</button></div>
+              <div className="price"><small>Single</small><strong>{money(p.single)}</strong><button className="mini-add" disabled={p.single == null} onClick={()=>add(p.id,"single")}>+</button></div>
             </div>
           </div>
         </article>)}
@@ -612,19 +622,32 @@ function App() {
       <strong>{count} items</strong><b>{money(total)}</b>
     </button>}
 
+    {checkout && <div className="overlay" onClick={()=>setCheckout(false)}>
+      <aside className="sheet checkout-sheet" onClick={e=>e.stopPropagation()}>
+        <div className="sheet-head"><div><div className="eyebrow">CHECKOUT</div><h2>Delivery details</h2></div><button className="close" onClick={()=>setCheckout(false)}>×</button></div>
+        <div className="checkout-form">
+          <label>Full name<input placeholder="Enter your name"/></label>
+          <label>Phone number<input placeholder="024 XXX XXXX" inputMode="tel"/></label>
+          <label>Delivery location<textarea placeholder="Enter delivery address or location"></textarea></label>
+          <div className="checkout-summary"><span>Order total</span><strong>{money(total)}</strong></div>
+          <button className="pay-btn" onClick={()=>alert("Payment gateway will be connected next. Your checkout details are ready.")}>Proceed to Payment</button>
+        </div>
+      </aside>
+    </div>}
+
     {cartOpen && <div className="overlay" onClick={()=>setCartOpen(false)}>
       <aside className="sheet" onClick={e=>e.stopPropagation()}>
         <div className="sheet-head"><div><div className="eyebrow">YOUR ORDER</div><h2>Your cart <small>({count})</small></h2></div><button className="close" onClick={()=>setCartOpen(false)}>×</button></div>
         <div className="cart-list">
-          {cartItems.length===0 ? <div className="empty">Your cart is empty.</div> : cartItems.map(p=><div className="cart-row" key={p.id}>
-            <div className="thumb"><ProductImage product={p}/></div>
-            <div className="cart-name"><strong>{p.name}</strong><small>{mode==="single"?"Single":"Bulk"} · {money(price(p))}</small>
-              <div className="qty"><button onClick={()=>remove(p.id)}>−</button><b>{cart[p.id]}</b><button onClick={()=>add(p.id)}>+</button></div>
+          {cartItems.length===0 ? <div className="empty">Your cart is empty.</div> : cartItems.map(item=><div className="cart-row" key={item.key}>
+            <div className="thumb"><ProductImage product={item.p}/></div>
+            <div className="cart-name"><strong>{item.p.name}</strong><small>{item.type === "single" ? "Single" : "Bulk"} · {money(item.type === "single" ? item.p.single : item.p.bulk)}</small>
+              <div className="qty"><button onClick={()=>remove(item.p.id,item.type)}>−</button><b>{item.qty}</b><button onClick={()=>add(item.p.id,item.type)}>+</button></div>
             </div>
-            <strong>{money((price(p)||0)*cart[p.id])}</strong>
+            <strong>{money((Number(item.type === "single" ? item.p.single : item.p.bulk)||0)*item.qty)}</strong>
           </div>)}
         </div>
-        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><button onClick={()=>alert("Checkout is the next step — delivery details and secure payment will be connected here.")}>Continue</button></div>
+        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><button onClick={()=>setCheckout(true)}>Checkout</button></div>
       </aside>
     </div>}
   </div>
