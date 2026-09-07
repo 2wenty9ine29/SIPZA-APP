@@ -17,7 +17,7 @@ const products = [
     "bulk": 8.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.asadwasoshop.com/media/catalog/product/cache/d9ddc473ae54d47d9008a7c7b1b5a786/a/w/awake_purified_water_500ml_pet.png"
   },
   {
     "id": 3,
@@ -25,7 +25,7 @@ const products = [
     "bulk": 25.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.asadwasoshop.com/media/catalog/product/cache/d9ddc473ae54d47d9008a7c7b1b5a786/a/w/awake_purified_water_500ml_pet.png"
   },
   {
     "id": 4,
@@ -33,7 +33,7 @@ const products = [
     "bulk": 35.0,
     "single": 3.0,
     "category": "Water",
-    "image": ""
+    "image": "https://www.asadwasoshop.com/media/catalog/product/cache/d9ddc473ae54d47d9008a7c7b1b5a786/a/w/awake_purified_water_500ml_pet.png"
   },
   {
     "id": 5,
@@ -41,7 +41,7 @@ const products = [
     "bulk": 45.0,
     "single": 4.0,
     "category": "Water",
-    "image": ""
+    "image": "https://www.asadwasoshop.com/media/catalog/product/cache/d9ddc473ae54d47d9008a7c7b1b5a786/a/w/awake_purified_water_500ml_pet.png"
   },
   {
     "id": 6,
@@ -57,7 +57,7 @@ const products = [
     "bulk": 35.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1509560755237437441-800x800.jpg"
   },
   {
     "id": 8,
@@ -65,7 +65,7 @@ const products = [
     "bulk": 45.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1509560755237437441-800x800.jpg"
   },
   {
     "id": 9,
@@ -73,7 +73,7 @@ const products = [
     "bulk": 45.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1509560755237437441-800x800.jpg"
   },
   {
     "id": 10,
@@ -81,7 +81,7 @@ const products = [
     "bulk": 45.0,
     "single": 4.0,
     "category": "Cola",
-    "image": ""
+    "image": "https://www.amoragh.com/storage/products/grocery/beverages/bel-cola.jpg"
   },
   {
     "id": 11,
@@ -89,7 +89,7 @@ const products = [
     "bulk": 95.0,
     "single": null,
     "category": "Malt",
-    "image": ""
+    "image": "https://konzoom.shop/cdn/shop/products/beta-malt_5a71c2fe-dd38-4a98-aadc-c36e3b55328c.jpg?v=1640172670"
   },
   {
     "id": 12,
@@ -97,7 +97,7 @@ const products = [
     "bulk": 50.0,
     "single": 4.0,
     "category": "Cola",
-    "image": ""
+    "image": "https://www.amoragh.com/storage/products/grocery/beverages/bigoo-cola.jpg"
   },
   {
     "id": 13,
@@ -105,7 +105,7 @@ const products = [
     "bulk": 47.0,
     "single": null,
     "category": "Cola",
-    "image": ""
+    "image": "https://www.amoragh.com/storage/products/grocery/beverages/bel-breeze.jpg"
   },
   {
     "id": 14,
@@ -129,7 +129,7 @@ const products = [
     "bulk": 240.0,
     "single": 14.0,
     "category": "Malt",
-    "image": ""
+    "image": "https://www.pngkit.com/png/detail/110-1100836_guinness-png.png"
   },
   {
     "id": 17,
@@ -137,7 +137,7 @@ const products = [
     "bulk": 190.0,
     "single": 10.0,
     "category": "Malt",
-    "image": ""
+    "image": "https://www.pngkit.com/png/detail/110-1100836_guinness-png.png"
   },
   {
     "id": 18,
@@ -145,7 +145,7 @@ const products = [
     "bulk": 16.0,
     "single": null,
     "category": "Juice",
-    "image": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=900&q=85"
+    "image": "https://www.supermart.ng/cdn/shop/files/OkeA1037x.webp?v=1706176283&width=460"
   },
   {
     "id": 19,
@@ -153,7 +153,7 @@ const products = [
     "bulk": 35.0,
     "single": null,
     "category": "Juice",
-    "image": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=900&q=85"
+    "image": "https://www.supermart.ng/cdn/shop/files/OkeA1037x.webp?v=1706176283&width=460"
   },
   {
     "id": 20,
@@ -169,7 +169,7 @@ const products = [
     "bulk": 25.0,
     "single": null,
     "category": "Cola",
-    "image": "https://images.unsplash.com/photo-1554866585-cd94860890b7?auto=format&fit=crop&w=900&q=85"
+    "image": "https://hillcrestkwikspar.co.za/shop/public/6/images/products/resize_vU1GmsqK_1663497894_826.jpg"
   },
   {
     "id": 22,
@@ -177,7 +177,7 @@ const products = [
     "bulk": 90.0,
     "single": null,
     "category": "Cola",
-    "image": ""
+    "image": "https://hillcrestkwikspar.co.za/shop/public/6/images/products/resize_vU1GmsqK_1663497894_826.jpg"
   },
   {
     "id": 23,
@@ -185,7 +185,7 @@ const products = [
     "bulk": 65.0,
     "single": null,
     "category": "Cola",
-    "image": ""
+    "image": "https://hillcrestkwikspar.co.za/shop/public/6/images/products/resize_vU1GmsqK_1663497894_826.jpg"
   },
   {
     "id": 24,
@@ -233,7 +233,7 @@ const products = [
     "bulk": 65.0,
     "single": 9.0,
     "category": "Fanta",
-    "image": "https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=900&q=85"
+    "image": "https://mama-t.de/cdn/shop/files/fanta-orange-ghana.jpg"
   },
   {
     "id": 30,
@@ -241,7 +241,7 @@ const products = [
     "bulk": 15.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.supermart.ng/cdn/shop/files/OkeA1037x.webp?v=1706176283&width=460"
   },
   {
     "id": 31,
@@ -265,7 +265,7 @@ const products = [
     "bulk": 97.0,
     "single": 5.0,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
   },
   {
     "id": 34,
@@ -289,7 +289,7 @@ const products = [
     "bulk": 80.0,
     "single": null,
     "category": "Energy",
-    "image": ""
+    "image": "https://shop.africanfoodsupermarket.com/cdn/shop/products/IMG_4519_600x.jpg?v=1571610324"
   },
   {
     "id": 37,
@@ -297,7 +297,7 @@ const products = [
     "bulk": 120.0,
     "single": null,
     "category": "Malt",
-    "image": ""
+    "image": "https://ghbasket.com/wp-content/uploads/2020/04/MALTA-GUINNESS-PET-330ML.jpg"
   },
   {
     "id": 38,
@@ -305,7 +305,7 @@ const products = [
     "bulk": 75.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
   },
   {
     "id": 39,
@@ -313,7 +313,7 @@ const products = [
     "bulk": null,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
   },
   {
     "id": 40,
@@ -321,7 +321,7 @@ const products = [
     "bulk": 20.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
   },
   {
     "id": 41,
@@ -337,7 +337,7 @@ const products = [
     "bulk": 35.0,
     "single": null,
     "category": "Other",
-    "image": ""
+    "image": "https://maxmartonline.com/images/thumbs/0008314_perla-mineral-water-500ml.jpeg"
   },
   {
     "id": 43,
@@ -345,7 +345,7 @@ const products = [
     "bulk": 120.0,
     "single": null,
     "category": "Malt",
-    "image": ""
+    "image": "https://ghbasket.com/wp-content/uploads/2020/04/MALTA-GUINNESS-PET-330ML.jpg"
   },
   {
     "id": 44,
@@ -385,7 +385,7 @@ const products = [
     "bulk": 72.0,
     "single": null,
     "category": "Energy",
-    "image": ""
+    "image": "https://www.modernghana.com/images/content/11142017154707_1.jpg"
   },
   {
     "id": 49,
@@ -401,7 +401,7 @@ const products = [
     "bulk": 75.0,
     "single": 7.0,
     "category": "Energy",
-    "image": ""
+    "image": "https://melcom.com/media/catalog/product/cache/1/image/1200x/040ec09b1e35df139433887a97daa66f/s/t/storm-energy-drink-350ml.jpg"
   },
   {
     "id": 51,
@@ -409,7 +409,7 @@ const products = [
     "bulk": 52.0,
     "single": 5.0,
     "category": "Energy",
-    "image": ""
+    "image": "https://melcom.com/media/catalog/product/cache/1/image/1200x/040ec09b1e35df139433887a97daa66f/s/t/storm-energy-drink-350ml.jpg"
   },
   {
     "id": 52,
@@ -417,7 +417,7 @@ const products = [
     "bulk": 67.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://vepaar.b-cdn.net/uploads/c-172202/product/14694065/media_16983308252019319648.jpg?aspect_ratio=1%3A1&crop_gravity=center&height=500&quality=70&width=500"
   },
   {
     "id": 53,
@@ -425,7 +425,7 @@ const products = [
     "bulk": 67.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.beksghana.com/cdn/shop/files/u-fresh-choco.jpg"
   },
   {
     "id": 54,
@@ -433,7 +433,7 @@ const products = [
     "bulk": 38.0,
     "single": null,
     "category": "Juice",
-    "image": ""
+    "image": "https://www.beksghana.com/cdn/shop/files/u-fresh-grsape-drink-350ml.jpg"
   },
   {
     "id": 55,
@@ -441,7 +441,7 @@ const products = [
     "bulk": 60.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.melcom.com/media/catalog/product/v/e/verna-mineral-water-500ml.jpg"
   },
   {
     "id": 56,
@@ -449,7 +449,7 @@ const products = [
     "bulk": 80.0,
     "single": 14.0,
     "category": "Other",
-    "image": ""
+    "image": "https://www.drinksghana.com/web/image/product.template/593/image_1024?unique=d0e293e5"
   },
   {
     "id": 57,
@@ -465,7 +465,7 @@ const products = [
     "bulk": 35.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.drinksghana.com/web/image/product.template/599/image_1024?unique=b0680dd"
   },
   {
     "id": 59,
@@ -473,7 +473,7 @@ const products = [
     "bulk": 35.0,
     "single": null,
     "category": "Water",
-    "image": ""
+    "image": "https://www.drinksghana.com/web/image/product.template/599/image_1024?unique=b0680dd"
   },
   {
     "id": 60,
@@ -489,7 +489,7 @@ const products = [
     "bulk": 47.0,
     "single": 5.0,
     "category": "Other",
-    "image": ""
+    "image": "https://www.nehasupermarket.com/storage/products/5-star-energy-drink-350ml-neha-supermarket.jpg"
   }
 ];
 const categories = ["All", "Water", "Cola", "Fanta", "Energy", "Malt", "Juice", "Wine & Champagne", "Other"];
@@ -597,8 +597,8 @@ function App() {
           <div className="info">
             <div className="name"><h3>{p.name}</h3><p>{p.category}</p></div>
             <div className="prices">
-              <strong>{money(price(p))}</strong>
-              <small>{mode === "single" ? "single" : "bulk"}</small>
+              <div className={mode === "single" ? "price active" : "price"}><small>Single</small><strong>{money(p.single)}</strong></div>
+              <div className={mode === "bulk" ? "price active" : "price"}><small>Bulk</small><strong>{money(p.bulk)}</strong></div>
             </div>
           </div>
         </article>)}
@@ -624,7 +624,7 @@ function App() {
             <strong>{money((price(p)||0)*cart[p.id])}</strong>
           </div>)}
         </div>
-        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><button>Continue</button></div>
+        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><button onClick={()=>alert("Checkout is the next step — delivery details and secure payment will be connected here.")}>Continue</button></div>
       </aside>
     </div>}
   </div>

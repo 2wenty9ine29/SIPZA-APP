@@ -1,18 +1,23 @@
-# SIPZA
+# SIPZA v2
 
-Your drinks. One cart.
+SIPZA — Your drinks. One cart.
 
-This is a React + Vite drinks catalogue/cart app using the same 61 products and prices from the previous price-list app.
+- Exact 61 products and original prices retained.
+- More real product photos added from public product listings.
+- Single and Bulk prices are now shown directly on each card.
+- Cart flow is ready for the next Checkout + Payment phase.
 
-## Run locally
+## Run
 
-```bash
 npm install
 npm run dev
-```
 
 ## Deploy
 
-This project is ready to deploy on Vercel. Vercel should detect Vite automatically.
+Vercel can build this Vite app with:
+Build: npm run build
+Output: dist
 
-**GitHub mobile upload:** upload all files in this folder directly into the root of your repository. Do not put them inside another folder.
+## Payment
+
+The current Continue button is only a placeholder. The next phase can connect checkout to a secure payment provider (for Ghana, Paystack or Hubtel are strong options). Do not put a payment secret key in the frontend.
