@@ -527,13 +527,14 @@ function App() {
   const [checkout, setCheckout] = useState(false);
   const [cart, setCart] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
+  const [customer, setCustomer] = useState({name:"", phone:"", email:"", location:""});
+  const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_b07abafc3c971a0fca3087a6846393f0327595f2";
 
   const filtered = useMemo(() => products.filter(p =>
     (active === "All" || p.category === active) &&
     `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase())
   ), [active, query]);
 
-  const price = p => mode === "single" ? p.single : p.bulk;
   const add = (id, type = mode) => setCart(c => {
     const key = `${id}-${type}`;
     return {...c, [key]: (c[key] || 0) + 1};
@@ -607,8 +608,11 @@ function App() {
           <div className="info">
             <div className="name"><h3>{p.name}</h3><p>{p.category}</p></div>
             <div className="prices">
-              <div className="price active"><small>Bulk</small><strong>{money(p.bulk)}</strong><button className="mini-add" onClick={()=>add(p.id,"bulk")}>+</button></div>
-              <div className="price"><small>Single</small><strong>{money(p.single)}</strong><button className="mini-add" disabled={p.single == null} onClick={()=>add(p.id,"single")}>+</button></div>
+              <div className={"price-line " + (mode==="bulk" ? "selected" : "")}><span>Bulk</span><strong>{money(p.bulk)}</strong></div>
+              <div className={"price-line " + (mode==="single" ? "selected" : "")}><span>Single</span><strong>{p.single == null ? "—" : money(p.single)}</strong></div>
+              <button className="item-add" disabled={mode==="single" && p.single == null} onClick={()=>add(p.id,mode)}>
+                Add {mode==="single" ? "Single" : "Bulk"}
+              </button>
             </div>
           </div>
         </article>)}
@@ -626,11 +630,32 @@ function App() {
       <aside className="sheet checkout-sheet" onClick={e=>e.stopPropagation()}>
         <div className="sheet-head"><div><div className="eyebrow">CHECKOUT</div><h2>Delivery details</h2></div><button className="close" onClick={()=>setCheckout(false)}>×</button></div>
         <div className="checkout-form">
-          <label>Full name<input placeholder="Enter your name"/></label>
-          <label>Phone number<input placeholder="024 XXX XXXX" inputMode="tel"/></label>
-          <label>Delivery location<textarea placeholder="Enter delivery address or location"></textarea></label>
+          <label>Full name<input value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})} placeholder="Enter your name"/></label>
+          <label>Phone number<input value={customer.phone} onChange={e=>setCustomer({...customer,phone:e.target.value})} placeholder="024 XXX XXXX" inputMode="tel"/></label>
+          <label>Email address<input value={customer.email} onChange={e=>setCustomer({...customer,email:e.target.value})} placeholder="you@example.com" inputMode="email"/></label>
+          <label>Delivery location<textarea value={customer.location} onChange={e=>setCustomer({...customer,location:e.target.value})} placeholder="Enter delivery address or location"></textarea></label>
           <div className="checkout-summary"><span>Order total</span><strong>{money(total)}</strong></div>
-          <button className="pay-btn" onClick={()=>alert("Payment gateway will be connected next. Your checkout details are ready.")}>Proceed to Payment</button>
+          <button className="pay-btn" onClick={()=>{
+            if(!customer.name || !customer.phone || !customer.email || !customer.location) return alert("Please complete all delivery details.");
+            if(!paystackKey) return alert("Payment is ready, but the Paystack public key still needs to be added in Vercel as VITE_PAYSTACK_PUBLIC_KEY.");
+            if(!window.PaystackPop) return alert("Payment checkout is still loading. Please try again.");
+            const popup = new window.PaystackPop();
+            popup.checkout({
+              key: paystackKey,
+              email: customer.email,
+              amount: Math.round(total * 100),
+              currency: "GHS",
+              phone: customer.phone,
+              onSuccess: (transaction) => {
+                alert("Payment successful. Reference: " + transaction.reference);
+                setCheckout(false);
+                setCart({});
+                setCartOpen(false);
+              },
+              onCancel: () => {}
+            });
+          }}>Proceed to Payment</button>
+          
         </div>
       </aside>
     </div>}

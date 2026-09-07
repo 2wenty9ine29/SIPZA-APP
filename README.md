@@ -1,23 +1,20 @@
-# SIPZA v2
+# SIPZA
 
-SIPZA — Your drinks. One cart.
+YOUR DRINKS. ONE CART.
 
-- Exact 61 products and original prices retained.
-- More real product photos added from public product listings.
-- Single and Bulk prices are now shown directly on each card.
-- Cart flow is ready for the next Checkout + Payment phase.
+## Version 7
+- Bulk and Single prices are shown together on every product.
+- Each product has one clean Add button.
+- The Add button follows the selected Bulk/Singles mode, so both types can be added to the same cart.
+- Cart keeps Bulk and Single quantities/prices separate.
+- Checkout collects name, phone, email and delivery location.
+- Paystack checkout is wired into the frontend. Add `VITE_PAYSTACK_PUBLIC_KEY` in Vercel to activate it.
+- Never put a Paystack secret key in the frontend.
 
-## Run
+## GitHub / Vercel
+Upload the contents of this ZIP to the repository, then redeploy on Vercel.
 
-npm install
-npm run dev
+For payment, add this Vercel Environment Variable:
+`VITE_PAYSTACK_PUBLIC_KEY` = your Paystack public key.
 
-## Deploy
-
-Vercel can build this Vite app with:
-Build: npm run build
-Output: dist
-
-## Payment
-
-The current Continue button is only a placeholder. The next phase can connect checkout to a secure payment provider (for Ghana, Paystack or Hubtel are strong options). Do not put a payment secret key in the frontend.
+Paystack secret keys must stay server-side.
