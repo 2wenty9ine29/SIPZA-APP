@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, getRedirectResult, signInWithRedirect, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo, reload } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, reload } from "firebase/auth";
 import "./styles.css";
 
 const firebaseConfig = {
@@ -18,7 +18,6 @@ const firebaseConfig = {
 const firebaseReady = Object.values(firebaseConfig).filter((_, i) => i < 6).every(Boolean);
 const firebaseApp = firebaseReady ? initializeApp(firebaseConfig) : null;
 const auth = firebaseApp ? getAuth(firebaseApp) : null;
-const googleProvider = new GoogleAuthProvider();
 const NOTIFY_EMAIL = import.meta.env.VITE_NOTIFY_EMAIL || "2wenty9ine2929@gmail.com";
 const API_ENDPOINT = "/api";
 
@@ -627,60 +626,7 @@ function App() {
 
   useEffect(() => {
     if (!auth) return;
-    let activeAuth = true;
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      if (!activeAuth) return;
-      setAuthUser(user);
-    });
-
-    // Google uses redirect auth on mobile. Firebase resolves the redirect result
-    // after returning to the app, then the auth observer keeps the UI in sync.
-    getRedirectResult(auth).then(async result => {
-      if (!result || !activeAuth) return;
-      const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
-      const googleIntent = sessionStorage.getItem("sipza_google_intent") || "login";
-      try {
-        if (isNewUser) {
-          // Only a Google signup asks for SIPZA-specific information. Google login
-          // never asks for name, email, or phone just to let an existing user in.
-          let phone = "Not provided";
-          if (googleIntent === "signup") {
-            phone = window.prompt(
-              "Welcome to SIPZA! Please enter your phone number to complete your new account:",
-              localStorage.getItem("sipza_customer_phone") || ""
-            ) || "Not provided";
-            localStorage.setItem("sipza_customer_phone", phone);
-          }
-          await notifySIPZA({
-            _subject: "New SIPZA Google customer sign-up",
-            name: result.user.displayName || "Google customer",
-            email: result.user.email || "",
-            phone
-          });
-        }
-        setAuthError("");
-        setContactSubmitted(true);
-        setAuthBusy(false);
-        setContactOpen(false);
-        setContactView("menu");
-      } catch (error) {
-        setAuthBusy(false);
-        setAuthError(error.message || "Google sign-in was completed, but the SIPZA notification could not be sent.");
-        setContactOpen(false);
-      } finally {
-        sessionStorage.removeItem("sipza_google_intent");
-      }
-    }).catch(error => {
-      if (!activeAuth) return;
-      sessionStorage.removeItem("sipza_google_intent");
-      setAuthError(error.message || "Google sign-in was not completed.");
-      setAuthBusy(false);
-    });
-
-    return () => {
-      activeAuth = false;
-      unsubscribe();
-    };
+    return onAuthStateChanged(auth, user => setAuthUser(user));
   }, []);
 
   const add = (id, type = mode, portion = "full") => setCart(c => {
@@ -742,7 +688,8 @@ function App() {
   );
 
   const PAYMENT_FEE_RATE = 0.0195;
-  const paymentFee = Number((total / (1 - PAYMENT_FEE_RATE) - total).toFixed(2));
+  const uncappedPaymentFee = total > 0 ? (total / (1 - PAYMENT_FEE_RATE) - total) : 0;
+  const paymentFee = Number(Math.min(3, uncappedPaymentFee).toFixed(2));
   const paymentTotal = Number((total + paymentFee).toFixed(2));
 
   const openContact = (view = "menu") => {
@@ -763,11 +710,8 @@ function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "notify", ...payload })
     });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || `SIPZA notification failed (${response.status}).`);
-    }
-    return result;
+    if (!response.ok) throw new Error("SIPZA notification service is unavailable.");
+    return response.json();
   };
 
   const sendVerificationCode = async (email, name) => {
@@ -863,8 +807,6 @@ function App() {
           throw new Error("Please verify your email before logging in. We sent you a verification link and a 6-digit code.");
         }
         setContactSubmitted(true);
-        setContactOpen(false);
-        setContactView("menu");
       } catch (error) {
         setAuthError(error.code === "auth/invalid-credential" ? "Email or password is incorrect." : (error.message || "Unable to log in."));
       } finally { setAuthBusy(false); }
@@ -876,24 +818,6 @@ function App() {
       await notifySIPZA({ _subject: "New SIPZA complaint", name: data.name, phone: data.phone, email: data.email, complaint: data.complaint });
       setContactSubmitted(true);
       setAuthBusy(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setAuthError("");
-    if (!auth) {
-      setAuthError("Google sign-in is not configured yet. Add the Firebase environment variables in Vercel.");
-      return;
-    }
-    setAuthBusy(true);
-    try {
-      // Redirect is preferred by Firebase on mobile devices and avoids popup-closed errors.
-      sessionStorage.setItem("sipza_google_intent", contactView === "signup" ? "signup" : "login");
-      await signInWithRedirect(auth, googleProvider);
-    } catch (error) {
-      sessionStorage.removeItem("sipza_google_intent");
-      setAuthBusy(false);
-      setAuthError(error.message || "Google sign-in was not completed.");
     }
   };
 
@@ -1025,8 +949,6 @@ function App() {
             <label>Confirm password<div className="password-field"><input required minLength="6" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" autoComplete="new-password" placeholder="Confirm password" /><button type="button" className="password-eye" onClick={()=>setShowConfirmPassword(v=>!v)} aria-label={showConfirmPassword ? "Hide password" : "Show password"}>{showConfirmPassword ? "◉" : "◌"}</button></div></label>
             {authError && <p className="contact-error">{authError}</p>}
             <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Creating account…" : "Create account & verify"}</button>
-            <div className="auth-divider"><span>or</span></div>
-            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}><span className="google-icon" aria-hidden="true">G</span> Continue with Google</button>
           </form>}
 
           {contactView === "signup" && verificationPending && <div className="verification-card">
@@ -1046,8 +968,6 @@ function App() {
             {authError && <p className="contact-error">{authError}</p>}
             {contactSubmitted && <p className="contact-success">You're logged in.</p>}
             <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Logging in…" : "Log in"}</button>
-            <div className="auth-divider"><span>or</span></div>
-            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}><span className="google-icon" aria-hidden="true">G</span> Continue with Google</button>
           </form>}
 
           {contactView === "complaint" && <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -1081,7 +1001,7 @@ function App() {
           </div>)}
         </div>
         <div className="total"><div className="cart-fee-row"><span>Subtotal</span><strong>{money(total)}</strong></div>
-<div className="cart-fee-row"><span>Payment fee (1.95%)</span><strong>{money(paymentFee)}</strong></div>
+<div className="cart-fee-row"><span>Payment fee (1.95%, max GH₵3)</span><strong>{money(paymentFee)}</strong></div>
 <div><span>Total</span><strong>{money(paymentTotal)}</strong></div><div className="total-actions"><button className="clear-cart" onClick={clearCart} disabled={!count}>Clear</button><button className="checkout-btn" onClick={startPayment} disabled={!count}>Checkout</button></div></div>
       </aside>
     </div>}
