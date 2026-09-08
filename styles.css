@@ -55,3 +55,35 @@ main{max-width:1200px;margin:auto;padding:8px 24px 40px}.hero{min-height:245px;m
 
 /* SIPZA v11 — cart actions */
 .total-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:9px}.total-actions button{width:100%;border:0;border-radius:14px;padding:13px 12px;font-weight:800;cursor:pointer}.clear-cart{background:transparent!important;color:#b7b7bd!important;border:1px solid #3a3a40!important}.clear-cart:hover{background:#222226!important;color:#fff!important}.clear-cart:disabled,.checkout-btn:disabled{opacity:.4;cursor:not-allowed}.checkout-btn{background:var(--accent);color:#111}
+
+.cart-fee-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:13px;opacity:.82}
+.cart-fee-row.total-row{font-size:16px;font-weight:800;opacity:1;padding-top:10px;margin-top:6px;border-top:1px solid rgba(255,255,255,.08)}
+
+/* SIPZA v15 — bulk quantity picker */
+.fraction-sheet{
+  width:min(92vw,460px);
+  margin:auto;
+  padding:22px;
+  border-radius:26px;
+  background:var(--panel,#171717);
+  box-shadow:0 24px 70px rgba(0,0,0,.38);
+}
+.fraction-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.fraction-head h2{margin:4px 0 6px}
+.fraction-head p{margin:0;opacity:.68;font-size:13px}
+.fraction-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+.fraction-option{
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  background:rgba(255,255,255,.04);
+  padding:16px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease;
+}
+.fraction-option:hover{transform:translateY(-2px);border-color:rgba(156,255,0,.55)}
+.fraction-option span{font-size:16px;font-weight:700}
+.fraction-option strong{font-size:14px;opacity:.8}

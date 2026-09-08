@@ -533,29 +533,60 @@ function App() {
     `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase())
   ), [active, query]);
 
-  const add = (id, type = mode) => setCart(c => {
-    const key = `${id}-${type}`;
+  const fractionProducts = p =>
+    /kalyppo|u-fresh|fanta|^can\s/i.test(p.name);
+
+  const [pickerProduct, setPickerProduct] = useState(null);
+
+  const add = (id, type = mode, portion = "full") => setCart(c => {
+    const key = `${id}|${type}|${portion}`;
     return {...c, [key]: (c[key] || 0) + 1};
   });
+
+  const handleProductAdd = (p) => {
+    if (mode === "bulk" && fractionProducts(p)) {
+      setPickerProduct(p);
+      return;
+    }
+    add(p.id, mode, "full");
+  };
+
+  const addFraction = (portion) => {
+    if (!pickerProduct) return;
+    add(pickerProduct.id, "bulk", portion);
+    setPickerProduct(null);
+  };
+
   const clearCart = () => setCart({});
 
-  const remove = (id, type) => setCart(c => {
-    const key = `${id}-${type}`;
+  const remove = (id, type, portion = "full") => setCart(c => {
+    const key = `${id}|${type}|${portion}`;
     const n={...c};
     if (!n[key] || n[key] <= 1) delete n[key]; else n[key]--;
     return n;
   });
 
   const cartItems = Object.entries(cart).map(([key, qty]) => {
-    const [id, type] = key.split("-");
+    const [id, type, portion = "full"] = key.split("|");
     const p = products.find(x => String(x.id) === id);
-    return p ? {p, type, qty, key} : null;
+    return p ? {p, type, portion, qty, key} : null;
   }).filter(Boolean);
+
   const count = cartItems.reduce((a,item)=>a+item.qty,0);
-  const total = cartItems.reduce((sum,item) => {
-    const unit = Number(item.type === "single" ? item.p.single : item.p.bulk) || 0;
-    return sum + unit * item.qty;
-  }, 0);
+
+  const portionMultiplier = portion =>
+    portion === "half" ? 0.5 : portion === "quarter" ? 0.25 : 1;
+
+  const itemUnitPrice = item =>
+    Number(item.type === "single" ? item.p.single : item.p.bulk * portionMultiplier(item.portion)) || 0;
+
+  const total = cartItems.reduce((sum,item) =>
+    sum + itemUnitPrice(item) * item.qty, 0
+  );
+
+  const PAYMENT_FEE_RATE = 0.0195;
+  const paymentFee = Number((total / (1 - PAYMENT_FEE_RATE) - total).toFixed(2));
+  const paymentTotal = Number((total + paymentFee).toFixed(2));
 
   const startPayment = () => {
     if (!total) return;
@@ -567,7 +598,7 @@ function App() {
     popup.checkout({
       key: paystackKey,
       email: "customer@sipza.app",
-      amount: Math.round(total * 100),
+      amount: Math.round(paymentTotal * 100),
       currency: "GHS",
       metadata: {
         custom_fields: [{ display_name: "SIPZA Order", variable_name: "sipza_order", value: String(count) + " items" }]
@@ -633,7 +664,7 @@ function App() {
             <div className="name"><h3>{p.name}</h3><p>{p.category}</p></div>
             <div className="prices">
               <strong className="active-price">{money(mode === "single" ? p.single : p.bulk)}</strong>
-              <button className="item-add clean-plus" aria-label={`Add ${mode}`} title={`Add ${mode}`} disabled={mode==="single" && p.single == null} onClick={()=>add(p.id,mode)}>
+              <button className="item-add clean-plus" aria-label={`Add ${mode}`} title={`Add ${mode}`} disabled={mode==="single" && p.single == null} onClick={()=>handleProductAdd(p)}>
                 <Icon size={16}><path d="M12 5v14M5 12h14"/></Icon>
               </button>
             </div>
@@ -655,15 +686,42 @@ function App() {
         <div className="cart-list">
           {cartItems.length===0 ? <div className="empty">Your cart is empty.</div> : cartItems.map(item=><div className="cart-row" key={item.key}>
             <div className="thumb"><ProductImage product={item.p}/></div>
-            <div className="cart-name"><strong>{item.p.name}</strong><small>{item.type === "single" ? "Single" : "Bulk"} · {money(item.type === "single" ? item.p.single : item.p.bulk)}</small>
-              <div className="qty"><button onClick={()=>remove(item.p.id,item.type)}>−</button><b>{item.qty}</b><button onClick={()=>add(item.p.id,item.type)}>+</button></div>
+            <div className="cart-name"><strong>{item.p.name}</strong><small>{item.type === "single" ? "Single" : (item.portion === "half" ? "Half" : item.portion === "quarter" ? "¼" : "Full")} · {money(itemUnitPrice(item))}</small>
+              <div className="qty"><button onClick={()=>remove(item.p.id,item.type,item.portion)}>−</button><b>{item.qty}</b><button onClick={()=>add(item.p.id,item.type,item.portion)}>+</button></div>
             </div>
-            <strong>{money((Number(item.type === "single" ? item.p.single : item.p.bulk)||0)*item.qty)}</strong>
+            <strong>{money(itemUnitPrice(item)*item.qty)}</strong>
           </div>)}
         </div>
-        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><div className="total-actions"><button className="clear-cart" onClick={clearCart} disabled={!count}>Clear cart</button><button className="checkout-btn" onClick={startPayment} disabled={!count}>Checkout</button></div></div>
+        <div className="total"><div className="cart-fee-row"><span>Subtotal</span><strong>{money(total)}</strong></div>
+<div className="cart-fee-row"><span>Payment fee (1.95%)</span><strong>{money(paymentFee)}</strong></div>
+<div><span>Total</span><strong>{money(paymentTotal)}</strong></div><div className="total-actions"><button className="clear-cart" onClick={clearCart} disabled={!count}>Clear cart</button><button className="checkout-btn" onClick={startPayment} disabled={!count}>Checkout</button></div></div>
       </aside>
     </div>}
+    {pickerProduct && <div className="overlay fraction-overlay" onClick={()=>setPickerProduct(null)}>
+      <aside className="fraction-sheet" onClick={e=>e.stopPropagation()}>
+        <div className="fraction-head">
+          <div>
+            <div className="eyebrow">CHOOSE QUANTITY</div>
+            <h2>{pickerProduct.name}</h2>
+            <p>Select how much of the bulk pack you want.</p>
+          </div>
+          <button className="close" onClick={()=>setPickerProduct(null)}>×</button>
+        </div>
+        <div className="fraction-options">
+          {[
+            ["full","Full",1],
+            ["half","Half",0.5],
+            ["quarter","¼",0.25]
+          ].map(([portion,label,mult]) =>
+            <button key={portion} className="fraction-option" onClick={()=>addFraction(portion)}>
+              <span>{label}</span>
+              <strong>{money(pickerProduct.bulk * mult)}</strong>
+            </button>
+          )}
+        </div>
+      </aside>
+    </div>}
+
   </div>
 }
 

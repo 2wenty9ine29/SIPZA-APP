@@ -25,3 +25,9 @@ Paystack secret keys must stay server-side.
 - Kept the Bulk/Singles selector and one clean circular + button per product.
 - Shows only the active price and one clean circular + button.
 - Removed the old conflicting add-button styling so the clean + style is actually used.
+
+
+### v15
+- Added a quantity picker for Fanta, Kalyppo, U-Fresh and can drinks in Bulk mode.
+- Bulk picker supports Full, Half and ¼ with calculated prices before adding to cart.
+- Preserved direct Paystack checkout and 1.95% fee gross-up.
