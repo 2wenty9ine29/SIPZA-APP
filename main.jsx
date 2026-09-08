@@ -1,6 +1,26 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo } from "firebase/auth";
 import "./styles.css";
+
+const firebaseConfig = {
+  // Firebase Web App config is public client configuration and is safe to ship in the browser.
+  // These values match the SIPZA Firebase project supplied by the owner.
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBciIb2j0In-pRw3_68kMX6M2peTrRpMCA",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "passwords-for-sipza.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "passwords-for-sipza",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "passwords-for-sipza.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "554261466249",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:554261466249:web:d35fb186c17d085bdc4a58",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-KJX8FW0TH1",
+};
+const firebaseReady = Object.values(firebaseConfig).filter((_, i) => i < 6).every(Boolean);
+const firebaseApp = firebaseReady ? initializeApp(firebaseConfig) : null;
+const auth = firebaseApp ? getAuth(firebaseApp) : null;
+const googleProvider = new GoogleAuthProvider();
+const NOTIFY_EMAIL = import.meta.env.VITE_NOTIFY_EMAIL || "2wenty9ine2929@gmail.com";
+const NOTIFY_ENDPOINT = `https://formsubmit.co/ajax/${encodeURIComponent(NOTIFY_EMAIL)}`;
 
 const products = [
   {
@@ -529,10 +549,10 @@ function App() {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactView, setContactView] = useState("menu");
   const [contactSubmitted, setContactSubmitted] = useState(false);
-  const [contactSending, setContactSending] = useState(false);
-  const [contactError, setContactError] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState("");
   const sipzaPhone = import.meta.env.VITE_SIPZA_PHONE || "0205987053";
-  const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || "2wenty9ine2929@gmail.com";
   const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_b07abafc3c971a0fca3087a6846393f0327595f2";
 
   const filtered = useMemo(() => products.filter(p =>
@@ -544,6 +564,11 @@ function App() {
     /kalyppo|u-fresh|fanta|^can\s/i.test(p.name);
 
   const [pickerProduct, setPickerProduct] = useState(null);
+
+  React.useEffect(() => {
+    if (!auth) return;
+    return onAuthStateChanged(auth, user => setAuthUser(user));
+  }, []);
 
   const add = (id, type = mode, portion = "full") => setCart(c => {
     const key = `${id}|${type}|${portion}`;
@@ -597,7 +622,6 @@ function App() {
 
   const openContact = (view = "menu") => {
     setContactSubmitted(false);
-    setContactError("");
     setContactView(view);
     setContactOpen(true);
   };
@@ -606,39 +630,89 @@ function App() {
     setContactOpen(false);
     setContactView("menu");
     setContactSubmitted(false);
-    setContactError("");
-    setContactSending(false);
+  };
+
+  const notifySIPZA = async (payload) => {
+    try {
+      await fetch(NOTIFY_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ ...payload, _captcha: "false", _template: "table" })
+      });
+    } catch (e) {
+      console.warn("SIPZA notification could not be sent", e);
+    }
   };
 
   const handleContactSubmit = async (event) => {
     event.preventDefault();
-    setContactSending(true);
-    setContactError("");
-
+    setAuthError("");
     const form = event.currentTarget;
-    const data = new FormData(form);
-    const type = contactView === "signup" ? "SIGN UP" : contactView === "complaint" ? "COMPLAINT" : "LOGIN";
+    const data = Object.fromEntries(new FormData(form).entries());
 
-    data.set("_subject", `SIPZA ${type} - ${data.get("name") || data.get("email") || "Customer"}`);
-    data.set("_captcha", "true");
-    data.set("_template", "table");
-    data.set("_replyto", String(data.get("email") || ""));
+    if (contactView === "signup") {
+      if (!auth) {
+        setAuthError("Account sign-up is not configured yet. Add the Firebase environment variables in Vercel.");
+        return;
+      }
+      setAuthBusy(true);
+      try {
+        const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        await updateProfile(credential.user, { displayName: data.name });
+        // Firebase keeps the customer signed in automatically after account creation.
+        // Send the verification email automatically; the customer does not need to request it manually.
+        await sendEmailVerification(credential.user);
+        localStorage.setItem("sipza_customer_phone", data.phone);
+        await notifySIPZA({ _subject: "New SIPZA customer sign-up", name: data.name, email: data.email, phone: data.phone });
+        setContactSubmitted(true);
+      } catch (error) {
+        setAuthError(error.code === "auth/email-already-in-use" ? "That email already has a SIPZA account. Try Log in." : (error.message || "Unable to create your account."));
+      } finally { setAuthBusy(false); }
+      return;
+    }
 
-    try {
-      const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(contactEmail)}`, {
-        method: "POST",
-        body: data,
-        headers: { Accept: "application/json" }
-      });
-      if (!response.ok) throw new Error("Unable to send");
+    if (contactView === "login") {
+      if (!auth) {
+        setAuthError("Login is not configured yet. Add the Firebase environment variables in Vercel.");
+        return;
+      }
+      setAuthBusy(true);
+      try {
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+        setContactSubmitted(true);
+      } catch (error) {
+        setAuthError(error.code === "auth/invalid-credential" ? "Email or password is incorrect." : (error.message || "Unable to log in."));
+      } finally { setAuthBusy(false); }
+      return;
+    }
+
+    if (contactView === "complaint") {
+      setAuthBusy(true);
+      await notifySIPZA({ _subject: "New SIPZA complaint", name: data.name, phone: data.phone, email: data.email, complaint: data.complaint });
       setContactSubmitted(true);
-      form.reset();
-    } catch (error) {
-      setContactError("We couldn't send this right now. Please try again or call SIPZA.");
-    } finally {
-      setContactSending(false);
+      setAuthBusy(false);
     }
   };
+
+  const handleGoogleAuth = async () => {
+    setAuthError("");
+    if (!auth) { setAuthError("Google sign-in is not configured yet. Add the Firebase environment variables in Vercel."); return; }
+    setAuthBusy(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
+      if (isNewUser) {
+        const phone = window.prompt("Welcome to SIPZA! Please enter your phone number so we can complete your account:", localStorage.getItem("sipza_customer_phone") || "") || "Not provided";
+        localStorage.setItem("sipza_customer_phone", phone);
+        await notifySIPZA({ _subject: "New SIPZA Google customer sign-up", name: result.user.displayName || "Google customer", email: result.user.email || "", phone });
+      }
+      setContactSubmitted(true);
+    } catch (error) {
+      setAuthError(error.message || "Google sign-in was not completed.");
+    } finally { setAuthBusy(false); }
+  };
+
+  const handleLogout = async () => { if (auth) await signOut(auth); setContactView("menu"); };
 
   const startPayment = () => {
     if (!total) return;
@@ -746,9 +820,13 @@ function App() {
         </div>
 
         {contactView === "menu" && <div className="contact-menu">
-          <button className="contact-option" onClick={()=>openContact("signup")}><span className="contact-option-icon">＋</span><span><strong>Sign up</strong><small>Create a SIPZA account and make checkout easier.</small></span><b>›</b></button>
-          <button className="contact-option" onClick={()=>openContact("login")}><span className="contact-option-icon">↪</span><span><strong>Log in</strong><small>Access your SIPZA account.</small></span><b>›</b></button>
-          {sipzaPhone ? <a className="contact-option" href={`tel:${sipzaPhone}`}><span className="contact-option-icon">☎</span><span><strong>Call us</strong><small>{sipzaPhone}</small></span><b>›</b></a> : <div className="contact-option disabled"><span className="contact-option-icon">☎</span><span><strong>Call us</strong><small>Add VITE_SIPZA_PHONE to enable calling.</small></span></div>}
+          {authUser ? <>
+            <div className="signed-in-card"><span className="contact-option-icon">✓</span><span><strong>Signed in</strong><small>{authUser.displayName || authUser.email}</small></span><button onClick={handleLogout}>Log out</button></div>
+          </> : <>
+            <button className="contact-option" onClick={()=>openContact("signup")}><span className="contact-option-icon">＋</span><span><strong>Sign up</strong><small>Create an account with your name, phone, email and password.</small></span><b>›</b></button>
+            <button className="contact-option" onClick={()=>openContact("login")}><span className="contact-option-icon">↪</span><span><strong>Log in</strong><small>Use your SIPZA email and password.</small></span><b>›</b></button>
+          </>}
+          {sipzaPhone ? <a className="contact-option" href={`tel:${sipzaPhone}`}><span className="contact-option-icon">☎</span><span><strong>Call us</strong><small>{sipzaPhone}</small></span><b>›</b></a> : null}
           <button className="contact-option" onClick={()=>openContact("complaint")}><span className="contact-option-icon">!</span><span><strong>Make a complaint</strong><small>Tell us what went wrong and we'll follow up.</small></span><b>›</b></button>
         </div>}
 
@@ -758,26 +836,31 @@ function App() {
             <label>Full name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
             <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
             <label>Phone<input required type="tel" name="phone" autoComplete="tel" placeholder="024 000 0000" /></label>
-            {contactSubmitted && <p className="contact-success">You're signed up. SIPZA has been notified with your name, phone and email.</p>}
-            {contactError && <p className="contact-error">{contactError}</p>}
-            <button className="contact-submit" type="submit" disabled={contactSending}>{contactSending ? "Sending…" : "Create account"}</button>
+            <label>Password<input required minLength="6" type="password" name="password" autoComplete="new-password" placeholder="Create a password" /></label>
+            {authError && <p className="contact-error">{authError}</p>}
+            {contactSubmitted && <p className="contact-success">Account created — you're now logged in. We've sent a verification email to your inbox. We've also sent your name, email and phone to SIPZA.</p>}
+            <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Creating account…" : "Create account & sign in"}</button>
+            <div className="auth-divider"><span>or</span></div>
+            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}>G&nbsp; Continue with Google</button>
           </form>}
 
           {contactView === "login" && <form className="contact-form" onSubmit={handleContactSubmit}>
             <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
             <label>Password<input required type="password" name="password" autoComplete="current-password" placeholder="Your password" /></label>
-            {contactSubmitted && <p className="contact-success">Login form submitted. Connect this form to your authentication backend to enable live sign-in.</p>}
-            <button className="contact-submit" type="submit">Log in</button>
+            {authError && <p className="contact-error">{authError}</p>}
+            {contactSubmitted && <p className="contact-success">You're logged in.</p>}
+            <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Logging in…" : "Log in"}</button>
+            <div className="auth-divider"><span>or</span></div>
+            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}>G&nbsp; Continue with Google</button>
           </form>}
 
           {contactView === "complaint" && <form className="contact-form" onSubmit={handleContactSubmit}>
-            <label>Name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
-            <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
-            <label>Phone<input required type="tel" name="phone" autoComplete="tel" placeholder="024 000 0000" /></label>
+            <label>Name<input required name="name" autoComplete="name" defaultValue={authUser?.displayName || ""} placeholder="Your name" /></label>
+            <label>Phone<input required type="tel" name="phone" placeholder="024 000 0000" /></label>
+            <label>Email<input required type="email" name="email" autoComplete="email" defaultValue={authUser?.email || ""} placeholder="you@example.com" /></label>
             <label>Complaint<textarea required name="complaint" placeholder="Tell us what happened..." /></label>
-            {contactSubmitted && <p className="contact-success">Thanks. Your complaint has been sent to SIPZA.</p>}
-            {contactError && <p className="contact-error">{contactError}</p>}
-            <button className="contact-submit" type="submit" disabled={contactSending}>{contactSending ? "Sending…" : "Submit complaint"}</button>
+            {contactSubmitted && <p className="contact-success">Thanks — your complaint has been sent to SIPZA.</p>}
+            <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Sending…" : "Submit complaint"}</button>
           </form>}
         </div>}
       </aside>

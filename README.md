@@ -39,15 +39,32 @@ Paystack secret keys must stay server-side.
 - Sign-up, login, and complaint screens are frontend-ready forms; connect them to the project's authentication/support backend to make submissions live.
 - Add `VITE_SIPZA_PHONE` in Vercel to enable the one-tap **Call us** action.
 
+### v17 — customer accounts + notifications
+- Restored the **password** field for normal SIPZA accounts.
+- Email/password sign-up creates a real Firebase account and **automatically signs the customer in** after successful registration.
+- Added **Continue with Google** to both Sign up and Log in.
+- New sign-up notifications send only the customer's **name, email and phone** to `2wenty9ine2929@gmail.com`. Passwords are never emailed.
+- Complaints send the customer's **name, phone, email and complaint** to the same address.
+- Call Us is set to **0205987053**.
 
-### v17 — Contact notifications
-- **Call us** now uses **0205987053** and opens the phone dialer on supported devices.
-- **Sign up** sends a notification to **2wenty9ine2929@gmail.com** containing the customer's name, phone and email.
-- **Make a complaint** sends the complaint plus the customer's name, phone and email to the same address.
-- Notifications use FormSubmit's AJAX endpoint, so no private email/API secret is stored in the frontend.
-- On the first live submission, FormSubmit may ask the mailbox owner to confirm/activate the receiving email address.
-- Signup no longer asks for or emails a password; a real password-based account system should be connected server-side when live authentication is added.
+#### Firebase setup (required for live accounts)
+1. Create a Firebase project and add a Web App.
+2. In Firebase Authentication → Sign-in method, enable **Email/Password** and **Google**.
+3. Add your deployed SIPZA domain to Firebase Authentication → Settings → Authorized domains.
+4. Copy the Firebase Web App config into the Vercel environment variables listed in `.env.example`.
+5. Redeploy on Vercel.
 
-Vercel environment variables:
-- `VITE_CONTACT_EMAIL=2wenty9ine2929@gmail.com`
-- `VITE_SIPZA_PHONE=0205987053`
+The notification form uses FormSubmit's AJAX endpoint; the first notification may require a one-time confirmation of `2wenty9ine2929@gmail.com`.
+
+
+## v19 — Email verification
+
+- Email/password signup keeps the password field.
+- Firebase automatically signs the customer in immediately after successful signup.
+- Firebase automatically sends a verification email to the customer's email address.
+- SIPZA receives only the customer's name, phone and email via the notification form; passwords are never included.
+- Google sign-in remains available for both signup and login.
+- Google users who are new to SIPZA are prompted for a phone number so the owner notification can include name, email and phone.
+
+### Firebase
+Email/Password and Google providers must be enabled in Firebase Authentication. The Firebase Web App configuration is already included as the public client configuration for the SIPZA project.
