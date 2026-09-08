@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo, reload } from "firebase/auth";
 import "./styles.css";
 
 const firebaseConfig = {
@@ -20,7 +20,7 @@ const firebaseApp = firebaseReady ? initializeApp(firebaseConfig) : null;
 const auth = firebaseApp ? getAuth(firebaseApp) : null;
 const googleProvider = new GoogleAuthProvider();
 const NOTIFY_EMAIL = import.meta.env.VITE_NOTIFY_EMAIL || "2wenty9ine2929@gmail.com";
-const NOTIFY_ENDPOINT = `https://formsubmit.co/ajax/${encodeURIComponent(NOTIFY_EMAIL)}`;
+const API_ENDPOINT = "/api";
 
 const products = [
   {
@@ -549,6 +549,12 @@ function App() {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactView, setContactView] = useState("menu");
   const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationToken, setVerificationToken] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
   const [authUser, setAuthUser] = useState(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -633,15 +639,59 @@ function App() {
   };
 
   const notifySIPZA = async (payload) => {
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "notify", ...payload })
+    });
+    if (!response.ok) throw new Error("SIPZA notification service is unavailable.");
+    return response.json();
+  };
+
+  const sendVerificationCode = async (email, name) => {
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "send-code", email, name })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Could not send verification code.");
+    setVerificationToken(result.token);
+  };
+
+  const checkVerificationCode = async () => {
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "verify-code", email: verificationEmail, code: verificationCode, token: verificationToken })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Invalid verification code.");
+    return true;
+  };
+
+  const resendFirebaseVerification = async () => {
+    if (!auth?.currentUser) return;
+    setAuthBusy(true); setAuthError("");
+    try { await sendEmailVerification(auth.currentUser); setContactSubmitted(true); }
+    catch (error) { setAuthError(error.message || "Could not resend the verification email."); }
+    finally { setAuthBusy(false); }
+  };
+
+  const finishVerification = async () => {
+    setAuthBusy(true); setAuthError("");
     try {
-      await fetch(NOTIFY_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ ...payload, _captcha: "false", _template: "table" })
-      });
-    } catch (e) {
-      console.warn("SIPZA notification could not be sent", e);
-    }
+      await checkVerificationCode();
+      await reload(auth.currentUser);
+      if (!auth.currentUser?.emailVerified) {
+        throw new Error("Please click the verification link in your email first, then tap ‘I verified my email’.");
+      }
+      const phone = localStorage.getItem("sipza_customer_phone") || "Not provided";
+      await notifySIPZA({ _subject: "New SIPZA customer sign-up", name: auth.currentUser.displayName || "SIPZA customer", email: auth.currentUser.email || verificationEmail, phone });
+      setVerificationPending(false);
+      setContactSubmitted(true);
+    } catch (error) { setAuthError(error.message || "Verification could not be completed."); }
+    finally { setAuthBusy(false); }
   };
 
   const handleContactSubmit = async (event) => {
@@ -655,16 +705,18 @@ function App() {
         setAuthError("Account sign-up is not configured yet. Add the Firebase environment variables in Vercel.");
         return;
       }
+      if (data.password !== data.confirmPassword) { setAuthError("Passwords do not match."); return; }
       setAuthBusy(true);
       try {
         const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         await updateProfile(credential.user, { displayName: data.name });
-        // Firebase keeps the customer signed in automatically after account creation.
-        // Send the verification email automatically; the customer does not need to request it manually.
         await sendEmailVerification(credential.user);
+        await sendVerificationCode(data.email, data.name);
         localStorage.setItem("sipza_customer_phone", data.phone);
-        await notifySIPZA({ _subject: "New SIPZA customer sign-up", name: data.name, email: data.email, phone: data.phone });
-        setContactSubmitted(true);
+        setVerificationEmail(data.email);
+        setVerificationCode("");
+        setVerificationPending(true);
+        setContactSubmitted(false);
       } catch (error) {
         setAuthError(error.code === "auth/email-already-in-use" ? "That email already has a SIPZA account. Try Log in." : (error.message || "Unable to create your account."));
       } finally { setAuthBusy(false); }
@@ -678,7 +730,16 @@ function App() {
       }
       setAuthBusy(true);
       try {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        const credential = await signInWithEmailAndPassword(auth, data.email, data.password);
+        await reload(credential.user);
+        if (!credential.user.emailVerified) {
+          await sendEmailVerification(credential.user);
+          await sendVerificationCode(data.email, credential.user.displayName || "SIPZA customer");
+          setVerificationEmail(data.email);
+          setVerificationCode("");
+          setVerificationPending(true);
+          throw new Error("Please verify your email before logging in. We sent you a verification link and a 6-digit code.");
+        }
         setContactSubmitted(true);
       } catch (error) {
         setAuthError(error.code === "auth/invalid-credential" ? "Email or password is incorrect." : (error.message || "Unable to log in."));
@@ -832,26 +893,37 @@ function App() {
 
         {contactView !== "menu" && <div className="contact-form-wrap">
           <button className="back-contact" onClick={()=>openContact()}>← Back to contact options</button>
-          {contactView === "signup" && <form className="contact-form" onSubmit={handleContactSubmit}>
+          {contactView === "signup" && !verificationPending && <form className="contact-form" onSubmit={handleContactSubmit}>
             <label>Full name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
             <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
             <label>Phone<input required type="tel" name="phone" autoComplete="tel" placeholder="024 000 0000" /></label>
-            <label>Password<input required minLength="6" type="password" name="password" autoComplete="new-password" placeholder="Create a password" /></label>
+            <label>Password<div className="password-field"><input required minLength="6" type={showPassword ? "text" : "password"} name="password" autoComplete="new-password" placeholder="Create a password" /><button type="button" className="password-eye" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "◉" : "◌"}</button></div></label>
+            <label>Confirm password<div className="password-field"><input required minLength="6" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" autoComplete="new-password" placeholder="Confirm password" /><button type="button" className="password-eye" onClick={()=>setShowConfirmPassword(v=>!v)} aria-label={showConfirmPassword ? "Hide password" : "Show password"}>{showConfirmPassword ? "◉" : "◌"}</button></div></label>
             {authError && <p className="contact-error">{authError}</p>}
-            {contactSubmitted && <p className="contact-success">Account created — you're now logged in. We've sent a verification email to your inbox. We've also sent your name, email and phone to SIPZA.</p>}
-            <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Creating account…" : "Create account & sign in"}</button>
+            <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Creating account…" : "Create account & verify"}</button>
             <div className="auth-divider"><span>or</span></div>
-            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}>G&nbsp; Continue with Google</button>
+            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}><span className="google-icon" aria-hidden="true">G</span> Continue with Google</button>
           </form>}
+
+          {contactView === "signup" && verificationPending && <div className="verification-card">
+            <h3>Verify your email</h3>
+            <p>We sent <strong>{verificationEmail}</strong> a Firebase verification link and a 6-digit verification code.</p>
+            <p className="verification-note">You must complete both steps before your SIPZA signup is finished.</p>
+            <label>6-digit code<input inputMode="numeric" maxLength="6" value={verificationCode} onChange={e=>setVerificationCode(e.target.value.replace(/\D/g, "").slice(0,6))} placeholder="000000" /></label>
+            {authError && <p className="contact-error">{authError}</p>}
+            <button className="contact-submit" disabled={authBusy || verificationCode.length !== 6} onClick={finishVerification}>{authBusy ? "Checking…" : "Verify & finish signup"}</button>
+            <button className="resend-btn" disabled={authBusy} onClick={resendFirebaseVerification}>Resend verification link</button>
+            {contactSubmitted && <p className="contact-success">Verification email resent.</p>}
+          </div>}
 
           {contactView === "login" && <form className="contact-form" onSubmit={handleContactSubmit}>
             <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
-            <label>Password<input required type="password" name="password" autoComplete="current-password" placeholder="Your password" /></label>
+            <label>Password<div className="password-field"><input required type={showPassword ? "text" : "password"} name="password" autoComplete="current-password" placeholder="Your password" /><button type="button" className="password-eye" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "◉" : "◌"}</button></div></label>
             {authError && <p className="contact-error">{authError}</p>}
             {contactSubmitted && <p className="contact-success">You're logged in.</p>}
             <button className="contact-submit" disabled={authBusy} type="submit">{authBusy ? "Logging in…" : "Log in"}</button>
             <div className="auth-divider"><span>or</span></div>
-            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}>G&nbsp; Continue with Google</button>
+            <button className="google-btn" disabled={authBusy} type="button" onClick={handleGoogleAuth}><span className="google-icon" aria-hidden="true">G</span> Continue with Google</button>
           </form>}
 
           {contactView === "complaint" && <form className="contact-form" onSubmit={handleContactSubmit}>

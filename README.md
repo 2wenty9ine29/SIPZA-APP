@@ -68,3 +68,20 @@ The notification form uses FormSubmit's AJAX endpoint; the first notification ma
 
 ### Firebase
 Email/Password and Google providers must be enabled in Firebase Authentication. The Firebase Web App configuration is already included as the public client configuration for the SIPZA project.
+
+## v19.1 — verification + notifications
+- Added show/hide password controls to password fields.
+- Email/password signup now sends both Firebase's verification link and a 6-digit code.
+- Signup cannot be finished until the Firebase email is verified and the 6-digit code is entered.
+- Email/password login blocks unverified accounts and sends fresh verification instructions.
+- New customer notifications and complaints now use the server-side `/api (action: notify)` endpoint with Resend; the Resend API key is never exposed to the browser.
+- Verification codes are generated and checked server-side with a signed, expiring token.
+
+### Vercel variables required
+Set these in Vercel Project Settings → Environment Variables:
+- `RESEND_API_KEY` — your Resend API key.
+- `SIPZA_NOTIFY_EMAIL` — `2wenty9ine2929@gmail.com`.
+- `SIPZA_FROM_EMAIL` — a sender address allowed by Resend. For production, verify your domain in Resend and use an address on that domain.
+- `VERIFICATION_SECRET` — a long random secret used to sign verification sessions.
+
+The Firebase `VITE_*` values can remain as shown in `.env.example`.
