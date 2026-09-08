@@ -630,9 +630,8 @@ function App() {
           <div className="info">
             <div className="name"><h3>{p.name}</h3><p>{p.category}</p></div>
             <div className="prices">
-              <div className={"price-line " + (mode==="bulk" ? "selected" : "")}><span>Bulk</span><strong>{money(p.bulk)}</strong></div>
-              <div className={"price-line " + (mode==="single" ? "selected" : "")}><span>Single</span><strong>{p.single == null ? "—" : money(p.single)}</strong></div>
-              <button className="item-add" aria-label={`Add ${mode}`} title={`Add ${mode}`} disabled={mode==="single" && p.single == null} onClick={()=>add(p.id,mode)}>+</button>
+              <strong className="active-price">{money(mode === "single" ? p.single : p.bulk)}</strong>
+              <button className="item-add clean-plus" aria-label={`Add ${mode}`} title={`Add ${mode}`} disabled={mode==="single" && p.single == null} onClick={()=>add(p.id,mode)}>+</button>
             </div>
           </div>
         </article>)}

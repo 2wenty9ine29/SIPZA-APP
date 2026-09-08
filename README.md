@@ -20,7 +20,8 @@ For payment, add this Vercel Environment Variable:
 Paystack secret keys must stay server-side.
 
 
-### v10 UI update
-- Removed Bulk/Single labels from product price cards.
+### v11 UI fix
+- Removed the unwanted Bulk/Single labels from product cards.
 - Kept the Bulk/Singles selector and one clean circular + button per product.
-- Refined the + button for a cleaner premium mobile UI.
+- Shows only the active price and one clean circular + button.
+- Removed the old conflicting add-button styling so the clean + style is actually used.
