@@ -529,7 +529,10 @@ function App() {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactView, setContactView] = useState("menu");
   const [contactSubmitted, setContactSubmitted] = useState(false);
-  const sipzaPhone = import.meta.env.VITE_SIPZA_PHONE || "";
+  const [contactSending, setContactSending] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const sipzaPhone = import.meta.env.VITE_SIPZA_PHONE || "0205987053";
+  const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || "2wenty9ine2929@gmail.com";
   const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_b07abafc3c971a0fca3087a6846393f0327595f2";
 
   const filtered = useMemo(() => products.filter(p =>
@@ -594,6 +597,7 @@ function App() {
 
   const openContact = (view = "menu") => {
     setContactSubmitted(false);
+    setContactError("");
     setContactView(view);
     setContactOpen(true);
   };
@@ -602,11 +606,38 @@ function App() {
     setContactOpen(false);
     setContactView("menu");
     setContactSubmitted(false);
+    setContactError("");
+    setContactSending(false);
   };
 
-  const handleContactSubmit = (event) => {
+  const handleContactSubmit = async (event) => {
     event.preventDefault();
-    setContactSubmitted(true);
+    setContactSending(true);
+    setContactError("");
+
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const type = contactView === "signup" ? "SIGN UP" : contactView === "complaint" ? "COMPLAINT" : "LOGIN";
+
+    data.set("_subject", `SIPZA ${type} - ${data.get("name") || data.get("email") || "Customer"}`);
+    data.set("_captcha", "true");
+    data.set("_template", "table");
+    data.set("_replyto", String(data.get("email") || ""));
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(contactEmail)}`, {
+        method: "POST",
+        body: data,
+        headers: { Accept: "application/json" }
+      });
+      if (!response.ok) throw new Error("Unable to send");
+      setContactSubmitted(true);
+      form.reset();
+    } catch (error) {
+      setContactError("We couldn't send this right now. Please try again or call SIPZA.");
+    } finally {
+      setContactSending(false);
+    }
   };
 
   const startPayment = () => {
@@ -727,9 +758,9 @@ function App() {
             <label>Full name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
             <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
             <label>Phone<input required type="tel" name="phone" autoComplete="tel" placeholder="024 000 0000" /></label>
-            <label>Password<input required type="password" name="password" autoComplete="new-password" placeholder="Create a password" /></label>
-            {contactSubmitted && <p className="contact-success">Your sign-up request has been received. Connect this form to your account backend to create live customer accounts.</p>}
-            <button className="contact-submit" type="submit">Create account</button>
+            {contactSubmitted && <p className="contact-success">You're signed up. SIPZA has been notified with your name, phone and email.</p>}
+            {contactError && <p className="contact-error">{contactError}</p>}
+            <button className="contact-submit" type="submit" disabled={contactSending}>{contactSending ? "Sending…" : "Create account"}</button>
           </form>}
 
           {contactView === "login" && <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -741,10 +772,12 @@ function App() {
 
           {contactView === "complaint" && <form className="contact-form" onSubmit={handleContactSubmit}>
             <label>Name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
-            <label>Phone or email<input required name="contact" placeholder="How should we reach you?" /></label>
+            <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
+            <label>Phone<input required type="tel" name="phone" autoComplete="tel" placeholder="024 000 0000" /></label>
             <label>Complaint<textarea required name="complaint" placeholder="Tell us what happened..." /></label>
-            {contactSubmitted && <p className="contact-success">Thanks. Your complaint has been captured in this form. Connect it to your support endpoint/email to send it to SIPZA.</p>}
-            <button className="contact-submit" type="submit">Submit complaint</button>
+            {contactSubmitted && <p className="contact-success">Thanks. Your complaint has been sent to SIPZA.</p>}
+            {contactError && <p className="contact-error">{contactError}</p>}
+            <button className="contact-submit" type="submit" disabled={contactSending}>{contactSending ? "Sending…" : "Submit complaint"}</button>
           </form>}
         </div>}
       </aside>

@@ -38,3 +38,16 @@ Paystack secret keys must stay server-side.
 - Contact menu includes **Sign up**, **Log in**, **Call us**, and **Make a complaint**.
 - Sign-up, login, and complaint screens are frontend-ready forms; connect them to the project's authentication/support backend to make submissions live.
 - Add `VITE_SIPZA_PHONE` in Vercel to enable the one-tap **Call us** action.
+
+
+### v17 — Contact notifications
+- **Call us** now uses **0205987053** and opens the phone dialer on supported devices.
+- **Sign up** sends a notification to **2wenty9ine2929@gmail.com** containing the customer's name, phone and email.
+- **Make a complaint** sends the complaint plus the customer's name, phone and email to the same address.
+- Notifications use FormSubmit's AJAX endpoint, so no private email/API secret is stored in the frontend.
+- On the first live submission, FormSubmit may ask the mailbox owner to confirm/activate the receiving email address.
+- Signup no longer asks for or emails a password; a real password-based account system should be connected server-side when live authentication is added.
+
+Vercel environment variables:
+- `VITE_CONTACT_EMAIL=2wenty9ine2929@gmail.com`
+- `VITE_SIPZA_PHONE=0205987053`
