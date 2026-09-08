@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo, reload } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, getRedirectResult, signInWithRedirect, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo, reload } from "firebase/auth";
 import "./styles.css";
 
 const firebaseConfig = {
@@ -627,7 +627,60 @@ function App() {
 
   useEffect(() => {
     if (!auth) return;
-    return onAuthStateChanged(auth, user => setAuthUser(user));
+    let activeAuth = true;
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      if (!activeAuth) return;
+      setAuthUser(user);
+    });
+
+    // Google uses redirect auth on mobile. Firebase resolves the redirect result
+    // after returning to the app, then the auth observer keeps the UI in sync.
+    getRedirectResult(auth).then(async result => {
+      if (!result || !activeAuth) return;
+      const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
+      const googleIntent = sessionStorage.getItem("sipza_google_intent") || "login";
+      try {
+        if (isNewUser) {
+          // Only a Google signup asks for SIPZA-specific information. Google login
+          // never asks for name, email, or phone just to let an existing user in.
+          let phone = "Not provided";
+          if (googleIntent === "signup") {
+            phone = window.prompt(
+              "Welcome to SIPZA! Please enter your phone number to complete your new account:",
+              localStorage.getItem("sipza_customer_phone") || ""
+            ) || "Not provided";
+            localStorage.setItem("sipza_customer_phone", phone);
+          }
+          await notifySIPZA({
+            _subject: "New SIPZA Google customer sign-up",
+            name: result.user.displayName || "Google customer",
+            email: result.user.email || "",
+            phone
+          });
+        }
+        setAuthError("");
+        setContactSubmitted(true);
+        setAuthBusy(false);
+        setContactOpen(false);
+        setContactView("menu");
+      } catch (error) {
+        setAuthBusy(false);
+        setAuthError(error.message || "Google sign-in was completed, but the SIPZA notification could not be sent.");
+        setContactOpen(false);
+      } finally {
+        sessionStorage.removeItem("sipza_google_intent");
+      }
+    }).catch(error => {
+      if (!activeAuth) return;
+      sessionStorage.removeItem("sipza_google_intent");
+      setAuthError(error.message || "Google sign-in was not completed.");
+      setAuthBusy(false);
+    });
+
+    return () => {
+      activeAuth = false;
+      unsubscribe();
+    };
   }, []);
 
   const add = (id, type = mode, portion = "full") => setCart(c => {
@@ -710,8 +763,11 @@ function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "notify", ...payload })
     });
-    if (!response.ok) throw new Error("SIPZA notification service is unavailable.");
-    return response.json();
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || `SIPZA notification failed (${response.status}).`);
+    }
+    return result;
   };
 
   const sendVerificationCode = async (email, name) => {
@@ -807,6 +863,8 @@ function App() {
           throw new Error("Please verify your email before logging in. We sent you a verification link and a 6-digit code.");
         }
         setContactSubmitted(true);
+        setContactOpen(false);
+        setContactView("menu");
       } catch (error) {
         setAuthError(error.code === "auth/invalid-credential" ? "Email or password is incorrect." : (error.message || "Unable to log in."));
       } finally { setAuthBusy(false); }
@@ -823,20 +881,20 @@ function App() {
 
   const handleGoogleAuth = async () => {
     setAuthError("");
-    if (!auth) { setAuthError("Google sign-in is not configured yet. Add the Firebase environment variables in Vercel."); return; }
+    if (!auth) {
+      setAuthError("Google sign-in is not configured yet. Add the Firebase environment variables in Vercel.");
+      return;
+    }
     setAuthBusy(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
-      if (isNewUser) {
-        const phone = window.prompt("Welcome to SIPZA! Please enter your phone number so we can complete your account:", localStorage.getItem("sipza_customer_phone") || "") || "Not provided";
-        localStorage.setItem("sipza_customer_phone", phone);
-        await notifySIPZA({ _subject: "New SIPZA Google customer sign-up", name: result.user.displayName || "Google customer", email: result.user.email || "", phone });
-      }
-      setContactSubmitted(true);
+      // Redirect is preferred by Firebase on mobile devices and avoids popup-closed errors.
+      sessionStorage.setItem("sipza_google_intent", contactView === "signup" ? "signup" : "login");
+      await signInWithRedirect(auth, googleProvider);
     } catch (error) {
+      sessionStorage.removeItem("sipza_google_intent");
+      setAuthBusy(false);
       setAuthError(error.message || "Google sign-in was not completed.");
-    } finally { setAuthBusy(false); }
+    }
   };
 
   const handleLogout = async () => { if (auth) await signOut(auth); setContactView("menu"); };
