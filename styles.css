@@ -30,3 +30,49 @@ main{max-width:1200px;margin:auto;padding:8px 24px 40px}.hero{min-height:245px;m
 .price-line.selected{border-color:rgba(161,255,0,.28);background:rgba(161,255,0,.07)}.price-line.selected span{color:var(--accent)}
 .info{position:relative}.prices{padding-right:42px;min-width:118px}.item-add{position:absolute;right:0;bottom:0;width:36px;height:36px;border:0;border-radius:12px;background:var(--accent);color:#111;font-size:25px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.3)}.item-add:disabled{opacity:.35;cursor:not-allowed}
 .payment-note{margin:0;color:#777;font-size:10px;line-height:1.5}
+
+
+/* SIPZA v10 — clean product add button */
+.mini-add.clean-plus {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 31px;
+  font-weight: 400;
+  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+  background: #9cff00;
+  color: #101010;
+  box-shadow: 0 6px 18px rgba(156,255,0,.18);
+  transform: none;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+
+.mini-add.clean-plus:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 22px rgba(156,255,0,.24);
+}
+
+.mini-add.clean-plus:active {
+  transform: scale(.94);
+}
+
+.mini-add.clean-plus:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+/* Make sure the price area no longer reserves space for the removed labels. */
+.price {
+  align-items: center;
+}
+
+.price strong {
+  line-height: 1.05;
+}

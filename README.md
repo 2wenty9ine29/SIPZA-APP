@@ -18,3 +18,9 @@ For payment, add this Vercel Environment Variable:
 `VITE_PAYSTACK_PUBLIC_KEY` = your Paystack public key.
 
 Paystack secret keys must stay server-side.
+
+
+### v10 UI update
+- Removed Bulk/Single labels from product price cards.
+- Kept the Bulk/Singles selector and one clean circular + button per product.
+- Refined the + button for a cleaner premium mobile UI.
