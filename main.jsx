@@ -537,6 +537,8 @@ function App() {
     const key = `${id}-${type}`;
     return {...c, [key]: (c[key] || 0) + 1};
   });
+  const clearCart = () => setCart({});
+
   const remove = (id, type) => setCart(c => {
     const key = `${id}-${type}`;
     const n={...c};
@@ -657,7 +659,7 @@ function App() {
             <strong>{money((Number(item.type === "single" ? item.p.single : item.p.bulk)||0)*item.qty)}</strong>
           </div>)}
         </div>
-        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><button onClick={startPayment}>Checkout</button></div>
+        <div className="total"><div><span>Total</span><strong>{money(total)}</strong></div><div className="total-actions"><button className="clear-cart" onClick={clearCart} disabled={!count}>Clear cart</button><button className="checkout-btn" onClick={startPayment} disabled={!count}>Checkout</button></div></div>
       </aside>
     </div>}
   </div>

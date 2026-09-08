@@ -28,23 +28,23 @@ main{max-width:1200px;margin:auto;padding:8px 24px 40px}.hero{min-height:245px;m
 .price-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:1px solid transparent;border-radius:9px;background:rgba(255,255,255,.035)}
 .price-line span{font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.08em}.price-line strong{font-size:12px}
 .price-line.selected{border-color:rgba(161,255,0,.28);background:rgba(161,255,0,.07)}.price-line.selected span{color:var(--accent)}
-.info{position:relative}.prices{padding-right:42px;min-width:118px}.item-add{position:absolute;right:0;bottom:0;width:36px;height:36px;border:0;border-radius:12px;background:var(--accent);color:#111;font-size:25px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.3)}.item-add:disabled{opacity:.35;cursor:not-allowed}
+.info{position:relative}.prices{padding-right:38px;min-width:112px}.item-add{position:absolute;right:0;bottom:0;width:36px;height:36px;border:0;border-radius:12px;background:var(--accent);color:#111;font-size:25px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.3)}.item-add:disabled{opacity:.35;cursor:not-allowed}
 .payment-note{margin:0;color:#777;font-size:10px;line-height:1.5}
 
 
 /* SIPZA v10 — clean product add button */
 .item-add.clean-plus {
   position:static;
-  width:40px;
-  height:40px;
-  min-width:40px;
+  width:32px;
+  height:32px;
+  min-width:32px;
   padding:0;
   border:0;
   border-radius:50%;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:25px;
+  font-size:19px;
   font-weight:400;
   line-height:1;
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,sans-serif;
@@ -56,3 +56,6 @@ main{max-width:1200px;margin:auto;padding:8px 24px 40px}.hero{min-height:245px;m
 .item-add.clean-plus:hover{transform:scale(1.04);box-shadow:0 8px 20px rgba(0,0,0,.3)}
 .item-add.clean-plus:active{transform:scale(.94)}
 .item-add.clean-plus:disabled{opacity:.35;cursor:not-allowed}
+
+/* SIPZA v11 — cart actions */
+.total-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:9px}.total-actions button{width:100%;border:0;border-radius:14px;padding:13px 12px;font-weight:800;cursor:pointer}.clear-cart{background:transparent!important;color:#b7b7bd!important;border:1px solid #3a3a40!important}.clear-cart:hover{background:#222226!important;color:#fff!important}.clear-cart:disabled,.checkout-btn:disabled{opacity:.4;cursor:not-allowed}.checkout-btn{background:var(--accent);color:#111}.
