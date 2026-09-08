@@ -54,4 +54,4 @@ main{max-width:1200px;margin:auto;padding:8px 24px 40px}.hero{min-height:245px;m
 .item-add.clean-plus:disabled{opacity:.35;cursor:not-allowed}
 
 /* SIPZA v11 — cart actions */
-.total-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:9px}.total-actions button{width:100%;border:0;border-radius:14px;padding:13px 12px;font-weight:800;cursor:pointer}.clear-cart{background:transparent!important;color:#b7b7bd!important;border:1px solid #3a3a40!important}.clear-cart:hover{background:#222226!important;color:#fff!important}.clear-cart:disabled,.checkout-btn:disabled{opacity:.4;cursor:not-allowed}.checkout-btn{background:var(--accent);color:#111}.
+.total-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:9px}.total-actions button{width:100%;border:0;border-radius:14px;padding:13px 12px;font-weight:800;cursor:pointer}.clear-cart{background:transparent!important;color:#b7b7bd!important;border:1px solid #3a3a40!important}.clear-cart:hover{background:#222226!important;color:#fff!important}.clear-cart:disabled,.checkout-btn:disabled{opacity:.4;cursor:not-allowed}.checkout-btn{background:var(--accent);color:#111}
