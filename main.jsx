@@ -526,6 +526,10 @@ function App() {
   const [mode, setMode] = useState("bulk");
   const [cart, setCart] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactView, setContactView] = useState("menu");
+  const [contactSubmitted, setContactSubmitted] = useState(false);
+  const sipzaPhone = import.meta.env.VITE_SIPZA_PHONE || "";
   const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_b07abafc3c971a0fca3087a6846393f0327595f2";
 
   const filtered = useMemo(() => products.filter(p =>
@@ -588,6 +592,23 @@ function App() {
   const paymentFee = Number((total / (1 - PAYMENT_FEE_RATE) - total).toFixed(2));
   const paymentTotal = Number((total + paymentFee).toFixed(2));
 
+  const openContact = (view = "menu") => {
+    setContactSubmitted(false);
+    setContactView(view);
+    setContactOpen(true);
+  };
+
+  const closeContact = () => {
+    setContactOpen(false);
+    setContactView("menu");
+    setContactSubmitted(false);
+  };
+
+  const handleContactSubmit = (event) => {
+    event.preventDefault();
+    setContactSubmitted(true);
+  };
+
   const startPayment = () => {
     if (!total) return;
     if (!paystackKey) return alert("Payment is ready, but the Paystack public key still needs to be added in Vercel as VITE_PAYSTACK_PUBLIC_KEY.");
@@ -618,10 +639,16 @@ function App() {
         <div className="logo">S</div>
         <div><div className="brand-name">SIPZA</div><div className="tag">YOUR DRINKS. ONE CART.</div></div>
       </div>
-      <button className="cart-icon" onClick={() => setCartOpen(true)}>
-        <Icon size={23}><path d="M3 4h2l2 12h10l2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></Icon>
-        {count > 0 && <b>{count}</b>}
-      </button>
+      <div className="header-actions">
+        <button className="contact-button" onClick={() => openContact()} aria-label="Contact SIPZA">
+          <Icon size={18}><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.6 9.6 0 0 1-4.1-.9L3 20l1.1-4A8.4 8.4 0 0 1 3 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5Z"/><path d="M8 10h8M8 14h5"/></Icon>
+          <span>Contact</span>
+        </button>
+        <button className="cart-icon" onClick={() => setCartOpen(true)} aria-label="Open cart">
+          <Icon size={23}><path d="M3 4h2l2 12h10l2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></Icon>
+          {count > 0 && <b>{count}</b>}
+        </button>
+      </div>
     </header>
 
     <main>
@@ -679,6 +706,49 @@ function App() {
       <span><Icon size={19}><path d="M3 4h2l2 12h10l2-8H6"/></Icon> Cart</span>
       <strong>{count} items</strong><b>{money(total)}</b>
     </button>}
+
+    {contactOpen && <div className="overlay contact-overlay" onClick={closeContact}>
+      <aside className="contact-sheet" onClick={e=>e.stopPropagation()}>
+        <div className="sheet-head">
+          <div><div className="eyebrow">SIPZA SUPPORT</div><h2>{contactView === "menu" ? "How can we help?" : contactView === "signup" ? "Create an account" : contactView === "login" ? "Welcome back" : "Make a complaint"}</h2></div>
+          <button className="close" onClick={closeContact}>×</button>
+        </div>
+
+        {contactView === "menu" && <div className="contact-menu">
+          <button className="contact-option" onClick={()=>openContact("signup")}><span className="contact-option-icon">＋</span><span><strong>Sign up</strong><small>Create a SIPZA account and make checkout easier.</small></span><b>›</b></button>
+          <button className="contact-option" onClick={()=>openContact("login")}><span className="contact-option-icon">↪</span><span><strong>Log in</strong><small>Access your SIPZA account.</small></span><b>›</b></button>
+          {sipzaPhone ? <a className="contact-option" href={`tel:${sipzaPhone}`}><span className="contact-option-icon">☎</span><span><strong>Call us</strong><small>{sipzaPhone}</small></span><b>›</b></a> : <div className="contact-option disabled"><span className="contact-option-icon">☎</span><span><strong>Call us</strong><small>Add VITE_SIPZA_PHONE to enable calling.</small></span></div>}
+          <button className="contact-option" onClick={()=>openContact("complaint")}><span className="contact-option-icon">!</span><span><strong>Make a complaint</strong><small>Tell us what went wrong and we'll follow up.</small></span><b>›</b></button>
+        </div>}
+
+        {contactView !== "menu" && <div className="contact-form-wrap">
+          <button className="back-contact" onClick={()=>openContact()}>← Back to contact options</button>
+          {contactView === "signup" && <form className="contact-form" onSubmit={handleContactSubmit}>
+            <label>Full name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
+            <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
+            <label>Phone<input required type="tel" name="phone" autoComplete="tel" placeholder="024 000 0000" /></label>
+            <label>Password<input required type="password" name="password" autoComplete="new-password" placeholder="Create a password" /></label>
+            {contactSubmitted && <p className="contact-success">Your sign-up request has been received. Connect this form to your account backend to create live customer accounts.</p>}
+            <button className="contact-submit" type="submit">Create account</button>
+          </form>}
+
+          {contactView === "login" && <form className="contact-form" onSubmit={handleContactSubmit}>
+            <label>Email<input required type="email" name="email" autoComplete="email" placeholder="you@example.com" /></label>
+            <label>Password<input required type="password" name="password" autoComplete="current-password" placeholder="Your password" /></label>
+            {contactSubmitted && <p className="contact-success">Login form submitted. Connect this form to your authentication backend to enable live sign-in.</p>}
+            <button className="contact-submit" type="submit">Log in</button>
+          </form>}
+
+          {contactView === "complaint" && <form className="contact-form" onSubmit={handleContactSubmit}>
+            <label>Name<input required name="name" autoComplete="name" placeholder="Your name" /></label>
+            <label>Phone or email<input required name="contact" placeholder="How should we reach you?" /></label>
+            <label>Complaint<textarea required name="complaint" placeholder="Tell us what happened..." /></label>
+            {contactSubmitted && <p className="contact-success">Thanks. Your complaint has been captured in this form. Connect it to your support endpoint/email to send it to SIPZA.</p>}
+            <button className="contact-submit" type="submit">Submit complaint</button>
+          </form>}
+        </div>}
+      </aside>
+    </div>}
 
     {cartOpen && <div className="overlay" onClick={()=>setCartOpen(false)}>
       <aside className="sheet" onClick={e=>e.stopPropagation()}>

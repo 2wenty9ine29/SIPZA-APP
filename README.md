@@ -31,3 +31,10 @@ Paystack secret keys must stay server-side.
 - Added a quantity picker for Fanta, Kalyppo, U-Fresh and can drinks in Bulk mode.
 - Bulk picker supports Full, Half and ¼ with calculated prices before adding to cart.
 - Preserved direct Paystack checkout and 1.95% fee gross-up.
+
+
+### v16 — Contact access
+- Added a **Contact** button directly beside the cart in the header, instead of placing contact actions on the right-hand side of the page.
+- Contact menu includes **Sign up**, **Log in**, **Call us**, and **Make a complaint**.
+- Sign-up, login, and complaint screens are frontend-ready forms; connect them to the project's authentication/support backend to make submissions live.
+- Add `VITE_SIPZA_PHONE` in Vercel to enable the one-tap **Call us** action.
