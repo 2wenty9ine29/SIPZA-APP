@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut, getAdditionalUserInfo, reload } from "firebase/auth";
@@ -558,6 +558,9 @@ function App() {
   const [authUser, setAuthUser] = useState(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [undoCart, setUndoCart] = useState(null);
+  const [undoSeconds, setUndoSeconds] = useState(0);
+  const [stateHydrated, setStateHydrated] = useState(false);
   const sipzaPhone = import.meta.env.VITE_SIPZA_PHONE || "0205987053";
   const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_b07abafc3c971a0fca3087a6846393f0327595f2";
 
@@ -571,7 +574,58 @@ function App() {
 
   const [pickerProduct, setPickerProduct] = useState(null);
 
-  React.useEffect(() => {
+  // Restore the customer's browsing state and cart before rendering the live app.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("sipza_app_state") || "null");
+      if (saved?.active) setActive(saved.active);
+      if (typeof saved?.query === "string") setQuery(saved.query);
+      if (saved?.mode === "single" || saved?.mode === "bulk") setMode(saved.mode);
+      if (saved?.cart && typeof saved.cart === "object") setCart(saved.cart);
+      if (saved?.scrollY) {
+        requestAnimationFrame(() => setTimeout(() => window.scrollTo(0, Number(saved.scrollY) || 0), 0));
+      }
+    } catch {} finally {
+      setStateHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!stateHydrated) return;
+    try {
+      localStorage.setItem("sipza_app_state", JSON.stringify({ active, query, mode, cart, scrollY: window.scrollY }));
+    } catch {}
+  }, [active, query, mode, cart, stateHydrated]);
+
+  useEffect(() => {
+    if (!stateHydrated) return;
+    const saveScroll = () => {
+      try {
+        const current = JSON.parse(localStorage.getItem("sipza_app_state") || "{}");
+        localStorage.setItem("sipza_app_state", JSON.stringify({ ...current, active, query, mode, cart, scrollY: window.scrollY }));
+      } catch {}
+    };
+    window.addEventListener("scroll", saveScroll, { passive: true });
+    return () => window.removeEventListener("scroll", saveScroll);
+  }, [active, query, mode, cart, stateHydrated]);
+
+  useEffect(() => {
+    if (!undoSeconds) return;
+    const timer = window.setInterval(() => setUndoSeconds(s => Math.max(0, s - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [undoSeconds]);
+
+  useEffect(() => {
+    if (undoSeconds === 0 && undoCart) {
+      setUndoCart(null);
+      try {
+        const current = JSON.parse(localStorage.getItem("sipza_app_state") || "{}");
+        localStorage.setItem("sipza_app_state", JSON.stringify({ ...current, cart: {} }));
+      } catch {}
+    }
+  }, [undoSeconds, undoCart]);
+
+  useEffect(() => {
     if (!auth) return;
     return onAuthStateChanged(auth, user => setAuthUser(user));
   }, []);
@@ -595,7 +649,19 @@ function App() {
     setPickerProduct(null);
   };
 
-  const clearCart = () => setCart({});
+  const clearCart = () => {
+    if (!count) return;
+    setUndoCart(cart);
+    setCart({});
+    setUndoSeconds(3);
+  };
+
+  const restoreCart = () => {
+    if (!undoCart) return;
+    setCart(undoCart);
+    setUndoCart(null);
+    setUndoSeconds(0);
+  };
 
   const remove = (id, type, portion = "full") => setCart(c => {
     const key = `${id}|${type}|${portion}`;
@@ -938,6 +1004,12 @@ function App() {
       </aside>
     </div>}
 
+    {undoCart && undoSeconds > 0 && <div className="undo-cart-toast" role="status">
+      <span>Cart cleared</span>
+      <button onClick={restoreCart}>Undo</button>
+      <small>{undoSeconds}s</small>
+    </div>}
+
     {cartOpen && <div className="overlay" onClick={()=>setCartOpen(false)}>
       <aside className="sheet" onClick={e=>e.stopPropagation()}>
         <div className="sheet-head"><div><div className="eyebrow">YOUR ORDER</div><h2>Your cart <small>({count})</small></h2></div><button className="close" onClick={()=>setCartOpen(false)}>×</button></div>
@@ -952,7 +1024,7 @@ function App() {
         </div>
         <div className="total"><div className="cart-fee-row"><span>Subtotal</span><strong>{money(total)}</strong></div>
 <div className="cart-fee-row"><span>Payment fee (1.95%)</span><strong>{money(paymentFee)}</strong></div>
-<div><span>Total</span><strong>{money(paymentTotal)}</strong></div><div className="total-actions"><button className="clear-cart" onClick={clearCart} disabled={!count}>Clear cart</button><button className="checkout-btn" onClick={startPayment} disabled={!count}>Checkout</button></div></div>
+<div><span>Total</span><strong>{money(paymentTotal)}</strong></div><div className="total-actions"><button className="clear-cart" onClick={clearCart} disabled={!count}>Clear</button><button className="checkout-btn" onClick={startPayment} disabled={!count}>Checkout</button></div></div>
       </aside>
     </div>}
     {pickerProduct && <div className="overlay fraction-overlay" onClick={()=>setPickerProduct(null)}>
