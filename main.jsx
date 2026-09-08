@@ -129,7 +129,7 @@ const products = [
     "bulk": 240.0,
     "single": 14.0,
     "category": "Malt",
-    "image": "https://www.pngkit.com/png/detail/110-1100836_guinness-png.png"
+    "image": ""
   },
   {
     "id": 17,
@@ -137,7 +137,7 @@ const products = [
     "bulk": 190.0,
     "single": 10.0,
     "category": "Malt",
-    "image": "https://www.pngkit.com/png/detail/110-1100836_guinness-png.png"
+    "image": ""
   },
   {
     "id": 18,
@@ -241,7 +241,7 @@ const products = [
     "bulk": 15.0,
     "single": null,
     "category": "Juice",
-    "image": "https://www.supermart.ng/cdn/shop/files/OkeA1037x.webp?v=1706176283&width=460"
+    "image": ""
   },
   {
     "id": 31,
@@ -273,7 +273,7 @@ const products = [
     "bulk": 30.0,
     "single": null,
     "category": "Water",
-    "image": "https://www.amoragh.com/storage/products/grocery/beverages/kalyppo-multifruit.jpg"
+    "image": "https://www.jiomart.com/images/product/original/rvwjfwhgl4/kangen-water-bottle-500-ml-pack-of-24-product-images-orvwjfwhgl4-p605440042-0-202310041626.jpg?im=Resize%3D%281000%2C1000%29"
   },
   {
     "id": 35,
@@ -305,7 +305,7 @@ const products = [
     "bulk": 75.0,
     "single": null,
     "category": "Juice",
-    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
+    "image": ""
   },
   {
     "id": 39,
@@ -313,7 +313,7 @@ const products = [
     "bulk": null,
     "single": null,
     "category": "Juice",
-    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
+    "image": ""
   },
   {
     "id": 40,
@@ -321,7 +321,7 @@ const products = [
     "bulk": 20.0,
     "single": null,
     "category": "Juice",
-    "image": "https://www.tospinomall.com.gh/image/cache/catalog/1483835088669061121-800x800.jpg"
+    "image": ""
   },
   {
     "id": 41,
@@ -633,7 +633,9 @@ function App() {
             <div className="name"><h3>{p.name}</h3><p>{p.category}</p></div>
             <div className="prices">
               <strong className="active-price">{money(mode === "single" ? p.single : p.bulk)}</strong>
-              <button className="item-add clean-plus" aria-label={`Add ${mode}`} title={`Add ${mode}`} disabled={mode==="single" && p.single == null} onClick={()=>add(p.id,mode)}>+</button>
+              <button className="item-add clean-plus" aria-label={`Add ${mode}`} title={`Add ${mode}`} disabled={mode==="single" && p.single == null} onClick={()=>add(p.id,mode)}>
+                <Icon size={16}><path d="M12 5v14M5 12h14"/></Icon>
+              </button>
             </div>
           </div>
         </article>)}
